@@ -2,15 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
 
 const app = express();
-
-// Configuración de CORS mejorada
-app.use(cors({
-    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3000',
-    credentials: true
-}));
 
 app.use(express.json());
 
@@ -29,8 +22,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
     }
 }));
 
-// Conexión a MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+// Conexión a MongoDB con URI real
+const mongoURI = 'mongodb+srv://hector:HectorCald17@cluster0.5zmm7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';  // Tu URI real aquí
+
+mongoose.connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
@@ -64,7 +59,7 @@ const errorHandler = (err, req, res, next) => {
     });
 };
 
-// Rutas API (deben estar antes de la ruta que renderiza el HTML)
+// Rutas API
 app.get('/restaurant', async (req, res, next) => {
     try {
         const restaurant = await Restaurant.findOne({});
@@ -135,7 +130,7 @@ app.delete('/platillo/:id', async (req, res, next) => {
     }
 });
 
-// Ruta para renderizar la página HTML (debe ir después de las rutas de la API)
+// Ruta para renderizar la página HTML
 app.get('/', (req, res) => {
     res.render('index');
 });
