@@ -5,18 +5,24 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// Configuración de CORS mejorada
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3000',
+    credentials: true
+}));
+
 app.use(express.json());
 
 // Configuración mejorada para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    } else if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        } else if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
     }
-  }
 }));
 
 // Conexión a MongoDB
@@ -45,8 +51,18 @@ const restaurantSchema = new mongoose.Schema({
 
 const Restaurant = mongoose.model('Restaurant', restaurantSchema);
 
+// Middleware para manejar errores
+const errorHandler = (err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+        message: 'Error en el servidor',
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+};
+
+// Rutas API
 // Obtener información del restaurante
-app.get('/restaurant', async (req, res) => {
+app.get('/restaurant', async (req, res, next) => {
     try {
         const restaurant = await Restaurant.findOne({});
         if (!restaurant) {
@@ -54,18 +70,18 @@ app.get('/restaurant', async (req, res) => {
         }
         res.json(restaurant);
     } catch (error) {
-        res.status(500).json({ message: 'Error al obtener la información del restaurante', error });
+        next(error);
     }
 });
 
 // Actualizar información del restaurante
-app.put('/restaurant', async (req, res) => {
+app.put('/restaurant', async (req, res, next) => {
     try {
         const { nombre, direccion, horario, contacto, pago } = req.body;
         const updatedRestaurant = await Restaurant.findOneAndUpdate(
             {}, // Se asume que solo hay un restaurante
             { nombre, direccion, horario, contacto, pago },
-            { new: true }
+            { new: true, runValidators: true }
         );
 
         if (!updatedRestaurant) {
@@ -73,12 +89,12 @@ app.put('/restaurant', async (req, res) => {
         }
         res.json(updatedRestaurant);
     } catch (error) {
-        res.status(500).json({ message: 'Error al actualizar la información del restaurante', error });
+        next(error);
     }
 });
 
 // Agregar un platillo al menú
-app.post('/platillo', async (req, res) => {
+app.post('/platillo', async (req, res, next) => {
     try {
         const restaurant = await Restaurant.findOne({});
         if (!restaurant) {
@@ -91,14 +107,14 @@ app.post('/platillo', async (req, res) => {
         });
 
         await restaurant.save();
-        res.json(restaurant);
+        res.status(201).json(restaurant);
     } catch (error) {
-        res.status(500).json({ message: 'Error al agregar platillo', error });
+        next(error);
     }
 });
 
 // Eliminar un platillo del menú
-app.delete('/platillo/:id', async (req, res) => {
+app.delete('/platillo/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
         const restaurant = await Restaurant.findOne({});
@@ -115,14 +131,27 @@ app.delete('/platillo/:id', async (req, res) => {
         await restaurant.save();
         res.json({ message: 'Platillo eliminado', restaurant });
     } catch (error) {
-        res.status(500).json({ message: 'Error al eliminar platillo', error });
+        next(error);
     }
 });
 
-// Ruta catch-all para SPA - debe ir después de todas las otras rutas
+// Ruta para verificar el estado del servidor
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date() });
+});
+
+// Middleware para manejar rutas no encontradas en la API
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ message: 'Ruta API no encontrada' });
+});
+
+// Ruta para servir la aplicación frontend - debe ir después de todas las rutas API
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Usar el middleware de manejo de errores
+app.use(errorHandler);
 
 // Iniciar el servidor
 const port = process.env.PORT || 3000;

@@ -12,20 +12,20 @@
     ],
     "routes": [
       {
+        "src": "/restaurant",
+        "dest": "index.js"
+      },
+      {
+        "src": "/platillo(.*)",
+        "dest": "index.js"
+      },
+      {
         "src": "/style.css",
         "dest": "/public/style.css"
       },
       {
         "src": "/script.js",
         "dest": "/public/script.js"
-      },
-      {
-        "src": "/favicon.ico",
-        "dest": "/public/favicon.ico"
-      },
-      {
-        "src": "/api/(.*)",
-        "dest": "index.js"
       },
       {
         "src": "/(.*)",
