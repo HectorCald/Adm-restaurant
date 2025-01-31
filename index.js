@@ -14,7 +14,11 @@ app.use(cors({
 
 app.use(express.json());
 
-// Configuración mejorada para servir archivos estáticos
+// Configuración de EJS como motor de plantillas
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views')); // Definimos la carpeta de vistas
+
+// Configuración para servir archivos estáticos como CSS y JS
 app.use(express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, filePath) => {
         if (filePath.endsWith('.css')) {
@@ -145,9 +149,9 @@ app.use('/api/*', (req, res) => {
     res.status(404).json({ message: 'Ruta API no encontrada' });
 });
 
-// Ruta para servir la aplicación frontend - debe ir después de todas las rutas API
+// Ruta para servir la aplicación frontend con EJS - Se renderiza el archivo `index.ejs`
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.render('index');  // Renderiza el archivo index.ejs desde la carpeta views
 });
 
 // Usar el middleware de manejo de errores
