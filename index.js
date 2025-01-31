@@ -36,6 +36,8 @@ const restaurantSchema = new mongoose.Schema({
 const Restaurant = mongoose.model('Restaurant', restaurantSchema);
 
 // Ruta para servir el archivo HTML principal
+app.use(express.static('public'));
+
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
