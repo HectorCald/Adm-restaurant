@@ -130,13 +130,6 @@ app.delete('/platillo/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
         console.log('📝 ID del platillo a eliminar:', id);
-
-        // Verificar si el ID es válido
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            console.log('⚠️ ID no válido');
-            return res.status(400).json({ message: 'ID no válido' });
-        }
-
         const restaurant = await Restaurant.findOne({});
         if (!restaurant) {
             console.log('⚠️ No se encontró el restaurante');
@@ -149,17 +142,18 @@ app.delete('/platillo/:id', async (req, res, next) => {
             return res.status(404).json({ message: 'Platillo no encontrado' });
         }
 
-        // Eliminar el platillo del menú
         restaurant.menu.platillos.splice(platilloIndex, 1);
         await restaurant.save();
-
         console.log('✅ Platillo eliminado:', restaurant);
-        res.json({ message: 'Platillo eliminado', restaurant });
+
+        // Asegúrate de devolver la estructura correcta
+        res.json({ message: 'Platillo eliminado', menu: restaurant.menu });
     } catch (error) {
         console.error('❌ Error en DELETE /platillo/:id:', error);
         next(error);
     }
 });
+
 
 
 // Ruta para renderizar la página HTML
