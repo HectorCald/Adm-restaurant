@@ -26,10 +26,6 @@
       {
         "src": "/script.js",
         "dest": "/public/script.js"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "/public/index.html"
       }
     ]
   }
