@@ -1,15 +1,24 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
-// MongoDB Connection
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public')); // Servir archivos estáticos
+
+// Conexión a MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
 
-// Restaurant Schema
+mongoose.connection.on('connected', () => console.log('✅ Conectado a MongoDB'));
+mongoose.connection.on('error', (err) => console.error('❌ Error en MongoDB:', err));
+
+// Definir esquema del restaurante
 const restaurantSchema = new mongoose.Schema({
     nombre: String,
     direccion: String,
@@ -26,30 +35,12 @@ const restaurantSchema = new mongoose.Schema({
 
 const Restaurant = mongoose.model('Restaurant', restaurantSchema);
 
+// Ruta para servir el archivo HTML principal
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));  // Para servir archivos estáticos
 
 // Obtener información del restaurante
-app.get('/restaurant', async (req, res) => {
-    try {
-        const restaurant = await Restaurant.findOne({});
-        if (!restaurant) {
-            return res.status(404).send('No restaurant found');
-        }
-        res.json(restaurant); // Enviar la información como JSON
-    } catch (error) {
-        res.status(500).send('Error fetching restaurant data');
-    }
-});
-
-// Actualizar información del restaurante
-// Update Restaurant Details
-// Obtener los detalles del restaurante
 app.get('/restaurant', async (req, res) => {
     try {
         const restaurant = await Restaurant.findOne({});
@@ -62,61 +53,26 @@ app.get('/restaurant', async (req, res) => {
     }
 });
 
-
-
-// Eliminar un platillo del menú
-app.delete('/platillo/:id', async (req, res) => {
-    try {
-        const { id } = req.params; // Obtener el ID del platillo que queremos eliminar
-
-        // Encontrar el restaurante
-        const restaurant = await Restaurant.findOne({});
-        if (!restaurant) {
-            return res.status(404).send('No restaurant found');
-        }
-
-        // Eliminar el platillo con el ID proporcionado
-        const platilloIndex = restaurant.menu.platillos.findIndex(platillo => platillo._id.toString() === id);
-        
-        if (platilloIndex === -1) {
-            return res.status(404).send('Platillo not found');
-        }
-
-        // Eliminar el platillo
-        restaurant.menu.platillos.splice(platilloIndex, 1);
-        
-        // Guardar los cambios
-        await restaurant.save();
-        res.json(restaurant);  // Devolver el restaurante con el menú actualizado
-    } catch (error) {
-        res.status(500).send('Error deleting platillo');
-    }
-});
 // Actualizar información del restaurante
 app.put('/restaurant', async (req, res) => {
     try {
         const { nombre, direccion, horario, contacto, pago } = req.body;
-
-        // Comprobar si hay un restaurante en la base de datos
         const updatedRestaurant = await Restaurant.findOneAndUpdate(
-            {},  // Buscamos el primer restaurante (en este caso, solo debería haber uno)
+            {}, // Se asume que solo hay un restaurante
             { nombre, direccion, horario, contacto, pago },
-            { new: true } // Retorna el documento actualizado
+            { new: true }
         );
 
-        // Si no se encuentra ningún restaurante
         if (!updatedRestaurant) {
-            return res.status(404).send('No restaurant found');
+            return res.status(404).json({ message: 'No se encontró el restaurante' });
         }
-
-        res.json(updatedRestaurant);  // Enviar la respuesta con los datos actualizados
+        res.json(updatedRestaurant);
     } catch (error) {
-        res.status(500).send('Error updating restaurant');
+        res.status(500).json({ message: 'Error al actualizar la información del restaurante', error });
     }
 });
 
-
-// Agregar Platillo
+// Agregar un platillo al menú
 app.post('/platillo', async (req, res) => {
     try {
         const restaurant = await Restaurant.findOne({});
@@ -130,15 +86,36 @@ app.post('/platillo', async (req, res) => {
         });
 
         await restaurant.save();
-        res.json(restaurant); // Regresa el restaurante actualizado con el platillo agregado
+        res.json(restaurant);
     } catch (error) {
         res.status(500).json({ message: 'Error al agregar platillo', error });
     }
 });
 
+// Eliminar un platillo del menú
+app.delete('/platillo/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restaurant = await Restaurant.findOne({});
+        if (!restaurant) {
+            return res.status(404).json({ message: 'No se encontró el restaurante' });
+        }
+
+        const platilloIndex = restaurant.menu.platillos.findIndex(platillo => platillo._id.toString() === id);
+        if (platilloIndex === -1) {
+            return res.status(404).json({ message: 'Platillo no encontrado' });
+        }
+
+        restaurant.menu.platillos.splice(platilloIndex, 1);
+        await restaurant.save();
+        res.json({ message: 'Platillo eliminado', restaurant });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al eliminar platillo', error });
+    }
+});
 
 // Iniciar el servidor
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
 });
