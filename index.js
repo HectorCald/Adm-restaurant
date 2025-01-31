@@ -139,23 +139,7 @@ app.delete('/platillo/:id', async (req, res, next) => {
     }
 });
 
-// Ruta para verificar el estado del servidor
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date() });
-});
 
-// Middleware para manejar rutas no encontradas en la API
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ message: 'Ruta API no encontrada' });
-});
-
-// Ruta para servir la aplicación frontend con EJS - Se renderiza el archivo `index.ejs`
-app.get('*', (req, res) => {
-    res.render('index');  // Renderiza el archivo index.ejs desde la carpeta views
-});
-
-// Usar el middleware de manejo de errores
-app.use(errorHandler);
 
 // Iniciar el servidor
 const port = process.env.PORT || 3000;
