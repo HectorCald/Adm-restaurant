@@ -8,9 +8,20 @@
     ],
     "routes": [
       {
+        "src": "/style\\.css",
+        "headers": {
+          "Content-Type": "text/css"
+        }
+      },
+      {
+        "src": "/script\\.js",
+        "headers": {
+          "Content-Type": "application/javascript"
+        }
+      },
+      {
         "src": "/(.*)",
         "dest": "index.js"
       }
     ]
   }
-  
