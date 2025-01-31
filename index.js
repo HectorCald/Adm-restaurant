@@ -7,7 +7,17 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Servir archivos estáticos
+
+// Configuración mejorada para servir archivos estáticos
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
@@ -34,13 +44,6 @@ const restaurantSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Restaurant = mongoose.model('Restaurant', restaurantSchema);
-
-// Ruta para servir el archivo HTML principal
-app.use(express.static('public'));
-
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
-});
 
 // Obtener información del restaurante
 app.get('/restaurant', async (req, res) => {
@@ -114,6 +117,11 @@ app.delete('/platillo/:id', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Error al eliminar platillo', error });
     }
+});
+
+// Ruta catch-all para SPA - debe ir después de todas las otras rutas
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Iniciar el servidor
