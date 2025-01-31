@@ -16,10 +16,10 @@ app.use(express.json());
 
 // Configuración mejorada para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public'), {
-    setHeaders: (res, path) => {
-        if (path.endsWith('.css')) {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.css')) {
             res.setHeader('Content-Type', 'text/css');
-        } else if (path.endsWith('.js')) {
+        } else if (filePath.endsWith('.js')) {
             res.setHeader('Content-Type', 'application/javascript');
         }
     }
