@@ -18,7 +18,6 @@ app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views')); // Definimos la carpeta de vistas
 
-
 // Configuración para servir archivos estáticos como CSS y JS
 app.use(express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, filePath) => {
@@ -64,12 +63,8 @@ const errorHandler = (err, req, res, next) => {
         error: process.env.NODE_ENV === 'development' ? err : {}
     });
 };
-app.get('*', (req, res) => {
-    res.render('index');
-});
 
-// Rutas API
-// Obtener información del restaurante
+// Rutas API (deben estar antes de la ruta que renderiza el HTML)
 app.get('/restaurant', async (req, res, next) => {
     try {
         const restaurant = await Restaurant.findOne({});
@@ -82,7 +77,6 @@ app.get('/restaurant', async (req, res, next) => {
     }
 });
 
-// Actualizar información del restaurante
 app.put('/restaurant', async (req, res, next) => {
     try {
         const { nombre, direccion, horario, contacto, pago } = req.body;
@@ -101,7 +95,6 @@ app.put('/restaurant', async (req, res, next) => {
     }
 });
 
-// Agregar un platillo al menú
 app.post('/platillo', async (req, res, next) => {
     try {
         const restaurant = await Restaurant.findOne({});
@@ -121,7 +114,6 @@ app.post('/platillo', async (req, res, next) => {
     }
 });
 
-// Eliminar un platillo del menú
 app.delete('/platillo/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -143,7 +135,13 @@ app.delete('/platillo/:id', async (req, res, next) => {
     }
 });
 
+// Ruta para renderizar la página HTML (debe ir después de las rutas de la API)
+app.get('/', (req, res) => {
+    res.render('index');
+});
 
+// Usar el middleware de manejo de errores
+app.use(errorHandler);
 
 // Iniciar el servidor
 const port = process.env.PORT || 3000;
