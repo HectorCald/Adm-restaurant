@@ -18,6 +18,7 @@ app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views')); // Definimos la carpeta de vistas
 
+
 // Configuración para servir archivos estáticos como CSS y JS
 app.use(express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, filePath) => {
@@ -63,6 +64,9 @@ const errorHandler = (err, req, res, next) => {
         error: process.env.NODE_ENV === 'development' ? err : {}
     });
 };
+app.get('*', (req, res) => {
+    res.render('index');
+});
 
 // Rutas API
 // Obtener información del restaurante
