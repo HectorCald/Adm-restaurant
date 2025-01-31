@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ DOM completamente cargado');
     const restaurantForm = document.getElementById('restaurantForm');
     const platilloForm = document.getElementById('platilloForm');
     const platillosList = document.getElementById('platillosList');
@@ -13,32 +14,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fetch and display restaurant information
-    // Fetch and display restaurant information
-async function fetchRestaurantInfo() {
-    try {
-        const response = await fetch('/restaurant');
-        const restaurant = await response.json();
-
-        // Completar el formulario con los datos del restaurante
-        Object.keys(restaurant).forEach(key => {
-            if (key !== '_id' && key !== 'menu' && key !== '__v' && key !== 'createdAt' && key !== 'updatedAt') {
-                const input = document.querySelector(`[name="${key}"]`);
-                if (input) input.value = restaurant[key];
+    async function fetchRestaurantInfo() {
+        console.log('📥 Fetching restaurant info...');
+        try {
+            const response = await fetch('/restaurant');
+            console.log('📤 Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        });
+            const restaurant = await response.json();
+            console.log('✅ Restaurant info:', restaurant);
 
-        // Mostrar los platillos
-        renderPlatillos(restaurant.menu.platillos);
-        log('Información del restaurante cargada exitosamente');
-    } catch (error) {
-        log('Error al cargar información del restaurante', 'error');
-        console.error(error);
+            // Completar el formulario con los datos del restaurante
+            Object.keys(restaurant).forEach(key => {
+                if (key !== '_id' && key !== 'menu' && key !== '__v' && key !== 'createdAt' && key !== 'updatedAt') {
+                    const input = document.querySelector(`[name="${key}"]`);
+                    if (input) input.value = restaurant[key];
+                }
+            });
+
+            // Mostrar los platillos
+            renderPlatillos(restaurant.menu.platillos);
+            log('Información del restaurante cargada exitosamente');
+        } catch (error) {
+            console.error('❌ Error fetching restaurant info:', error);
+            log('Error al cargar información del restaurante', 'error');
+        }
     }
-}
-
 
     // Render platillos list
     function renderPlatillos(platillos) {
+        console.log('🎨 Renderizando platillos:', platillos);
         platillosList.innerHTML = platillos.map(platillo => `
             <div class="platillo-item">
                 ${platillo.nombre} - Bs.-${platillo.precio}
@@ -50,8 +56,10 @@ async function fetchRestaurantInfo() {
     // Update restaurant information
     restaurantForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        console.log('📥 Submitting restaurant form...');
         const formData = Object.fromEntries(new FormData(restaurantForm));
-        
+        console.log('📝 Form data:', formData);
+
         try {
             const response = await fetch('/restaurant', {
                 method: 'PUT',
@@ -60,20 +68,27 @@ async function fetchRestaurantInfo() {
                 },
                 body: JSON.stringify(formData)
             });
+            console.log('📤 Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const updatedRestaurant = await response.json();
+            console.log('✅ Updated restaurant:', updatedRestaurant);
             log('Información del restaurante actualizada');
             renderPlatillos(updatedRestaurant.menu.platillos);
         } catch (error) {
+            console.error('❌ Error updating restaurant info:', error);
             log('Error al actualizar información', 'error');
-            console.error(error);
         }
     });
 
     // Add new platillo
     platilloForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        console.log('📥 Submitting platillo form...');
         const formData = Object.fromEntries(new FormData(platilloForm));
-        
+        console.log('📝 Form data:', formData);
+
         try {
             const response = await fetch('/platillo', {
                 method: 'POST',
@@ -82,28 +97,39 @@ async function fetchRestaurantInfo() {
                 },
                 body: JSON.stringify(formData)
             });
+            console.log('📤 Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const updatedRestaurant = await response.json();
+            console.log('✅ Updated restaurant:', updatedRestaurant);
             renderPlatillos(updatedRestaurant.menu.platillos);
             platilloForm.reset();
             log('Platillo agregado exitosamente');
         } catch (error) {
+            console.error('❌ Error adding platillo:', error);
             log('Error al agregar platillo', 'error');
-            console.error(error);
         }
     });
 
     // Delete platillo (global function for onclick)
     window.deletePlatillo = async (id) => {
+        console.log('📥 Deleting platillo with ID:', id);
         try {
             const response = await fetch(`/platillo/${id}`, {
                 method: 'DELETE'
             });
+            console.log('📤 Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const updatedRestaurant = await response.json();
+            console.log('✅ Updated restaurant:', updatedRestaurant);
             renderPlatillos(updatedRestaurant.menu.platillos);
             log(`Platillo ${id} eliminado`);
         } catch (error) {
+            console.error('❌ Error deleting platillo:', error);
             log('Error al eliminar platillo', 'error');
-            console.error(error);
         }
     };
 
