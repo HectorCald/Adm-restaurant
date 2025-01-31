@@ -33,8 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Mostrar los platillos
-            renderPlatillos(restaurant.menu.platillos);
+            // Verificar si 'menu' y 'platillos' existen antes de intentar renderizar
+            if (restaurant.menu && Array.isArray(restaurant.menu.platillos)) {
+                renderPlatillos(restaurant.menu.platillos);
+            } else {
+                log('No se encontraron platillos para mostrar', 'error');
+            }
+
             log('Información del restaurante cargada exitosamente');
         } catch (error) {
             console.error('❌ Error fetching restaurant info:', error);
@@ -45,6 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render platillos list
     function renderPlatillos(platillos) {
         console.log('🎨 Renderizando platillos:', platillos);
+        if (!platillos || platillos.length === 0) {
+            platillosList.innerHTML = '<div>No hay platillos disponibles.</div>';
+            return;
+        }
         platillosList.innerHTML = platillos.map(platillo => `
             <div class="platillo-item">
                 ${platillo.nombre} - Bs.-${platillo.precio}
@@ -75,7 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const updatedRestaurant = await response.json();
             console.log('✅ Updated restaurant:', updatedRestaurant);
             log('Información del restaurante actualizada');
-            renderPlatillos(updatedRestaurant.menu.platillos);
+            
+            // Verificar si 'platillos' existe antes de renderizar
+            if (updatedRestaurant.menu && Array.isArray(updatedRestaurant.menu.platillos)) {
+                renderPlatillos(updatedRestaurant.menu.platillos);
+            } else {
+                log('Error al actualizar los platillos', 'error');
+            }
         } catch (error) {
             console.error('❌ Error updating restaurant info:', error);
             log('Error al actualizar información', 'error');
@@ -103,7 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const updatedRestaurant = await response.json();
             console.log('✅ Updated restaurant:', updatedRestaurant);
-            renderPlatillos(updatedRestaurant.menu.platillos);
+            
+            // Verificar si 'platillos' existe antes de renderizar
+            if (updatedRestaurant.menu && Array.isArray(updatedRestaurant.menu.platillos)) {
+                renderPlatillos(updatedRestaurant.menu.platillos);
+            } else {
+                log('Error al agregar los platillos', 'error');
+            }
+
             platilloForm.reset();
             log('Platillo agregado exitosamente');
         } catch (error) {
@@ -125,8 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const updatedRestaurant = await response.json();
             console.log('✅ Updated restaurant:', updatedRestaurant);
-            renderPlatillos(updatedRestaurant.menu.platillos);
-            log(`Platillo ${id} eliminado`);
+            
+            // Verificar si los platillos fueron eliminados correctamente
+            if (updatedRestaurant.menu && Array.isArray(updatedRestaurant.menu.platillos)) {
+                renderPlatillos(updatedRestaurant.menu.platillos);
+                log(`Platillo ${id} eliminado`);
+            } else {
+                console.error('❌ Error: La estructura de platillos es inválida');
+                log('Error al eliminar platillo', 'error');
+            }
         } catch (error) {
             console.error('❌ Error deleting platillo:', error);
             log('Error al eliminar platillo', 'error');
