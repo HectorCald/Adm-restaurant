@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Restaurante</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Administración de Restaurante</h1>
+        
+        <div class="restaurant-info">
+            <h2>Información del Restaurante</h2>
+            <form id="restaurantForm">
+                <label>Nombre:
+                    <input type="text" name="nombre" required>
+                </label>
+                <label>Ubicación:
+                    <input type="text" name="direccion" required>
+                </label>
+                <label>Horario:
+                    <input type="text" name="horario" required>
+                </label>
+                <label>Contacto:
+                    <input type="text" name="contacto" required>
+                </label>
+                <label>Métodos de Pago:
+                    <input type="text" name="pago" required>
+                </label>
+                <button type="submit">Guardar Información</button>
+            </form>
+        </div>
+
+        <div class="menu-management">
+            <h2>Gestión de Menú</h2>
+            <form id="platilloForm">
+                <label>Nombre del Platillo:
+                    <input type="text" name="nombre" required>
+                </label>
+                <label>Precio:
+                    <input type="number" name="precio" required step="0.01">
+                </label>
+                <button type="submit">Agregar Platillo</button>
+            </form>
+
+            <div id="platillosList">
+                <!-- Platillos will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <div id="logs">
+            <h2>Logs del Sistema</h2>
+            <div id="logContainer"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
