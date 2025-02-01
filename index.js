@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const Grid = require('gridfs-stream'); // Para manejar GridFS
 
 const app = express();
 
@@ -31,6 +32,16 @@ mongoose.connect(mongoURI, {
     useUnifiedTopology: true
 });
 
+// Inicializar GridFS
+let bucket;
+mongoose.connection.once('open', () => {
+    // Ahora inicializamos el GridFSBucket después de la conexión
+    bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+        bucketName: 'qr_codes'
+    });
+    console.log('✅ GridFSBucket inicializado');
+});
+
 mongoose.connection.on('connected', () => console.log('✅ Conectado a MongoDB'));
 mongoose.connection.on('error', (err) => console.error('❌ Error en MongoDB:', err));
 
@@ -50,6 +61,39 @@ const restaurantSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Restaurant = mongoose.model('Restaurant', restaurantSchema);
+
+// Ruta para recuperar la imagen desde GridFS
+app.get('/imagen', async (req, res) => {
+    console.log('📥 GET /imagen - Solicitando imagen desde GridFS');
+    try {
+        if (!bucket) {
+            console.error('❌ GridFSBucket no está inicializado');
+            return res.status(500).json({ message: 'GridFSBucket no está inicializado' });
+        }
+
+        // Buscar el archivo en la colección qr_codes.files por el nombre del archivo
+        const file = await mongoose.connection.db.collection('qr_codes.files').findOne({ filename: 'qr_code.png' });
+        if (!file) {
+            console.log('⚠️ Imagen no encontrada en GridFS');
+            return res.status(404).json({ message: 'Imagen no encontrada' });
+        }
+
+        const fileId = file._id instanceof mongoose.mongo.ObjectId ? file._id : new mongoose.mongo.ObjectId(file._id);
+        const readStream = bucket.openDownloadStream(fileId);
+
+        readStream.on('error', (err) => {
+            console.error('❌ Error al crear el stream de la imagen:', err);
+            res.status(500).json({ message: 'Error al crear el stream para la imagen' });
+        });
+
+        res.set('Content-Type', file.contentType || 'image/png');
+        readStream.pipe(res);
+
+    } catch (error) {
+        console.error('❌ Error al recuperar la imagen:', error.message);
+        res.status(500).json({ message: `Error al recuperar la imagen: ${error.message}` });
+    }
+});
 
 // Middleware para manejar errores
 const errorHandler = (err, req, res, next) => {
@@ -153,8 +197,6 @@ app.delete('/platillo/:id', async (req, res, next) => {
         next(error);
     }
 });
-
-
 
 // Ruta para renderizar la página HTML
 app.get('/', (req, res) => {

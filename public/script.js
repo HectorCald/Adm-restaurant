@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const platilloForm = document.getElementById('platilloForm');
     const platillosList = document.getElementById('platillosList');
     const logContainer = document.getElementById('logContainer');
+    const restaurantImage = document.getElementById('restaurantImage'); // Asegúrate de agregar este elemento en tu HTML
 
     // Log function to display messages
     function log(message, type = 'info') {
@@ -12,6 +13,24 @@ document.addEventListener('DOMContentLoaded', () => {
         logEntry.className = type;
         logContainer.prepend(logEntry);
     }
+
+    // Función para cargar y mostrar la imagen del restaurante
+    async function loadRestaurantImage() {
+        try {
+            const response = await fetch('/imagen');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Actualizar la imagen en la página
+            restaurantImage.src = `/imagen?${new Date().getTime()}`; // Evitar caché
+            log('Imagen del restaurante cargada correctamente');
+        } catch (error) {
+            console.error('❌ Error cargando la imagen:', error);
+            log('Error al cargar la imagen del restaurante', 'error');
+        }
+    }
+
 
     // Fetch and display restaurant information
     async function fetchRestaurantInfo() {
@@ -161,6 +180,9 @@ document.addEventListener('DOMContentLoaded', () => {
             log('Error al eliminar platillo', 'error');
         }
     };
+
+    // Cargar la imagen del restaurante al inicio
+    loadRestaurantImage();
 
     // Initial fetch
     fetchRestaurantInfo();
